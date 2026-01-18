@@ -1,0 +1,8 @@
+{
+  "name": "KnowledgeOS - Second Brain",
+  "description": "An AI-powered Personal Knowledge Operating System that organizes, connects, and reasons over your personal notes and documents using RAG and Knowledge Graphs.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
