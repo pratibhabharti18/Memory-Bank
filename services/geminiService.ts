@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Note, KnowledgeGraphData, Insight } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Always use named parameter for apiKey and rely on process.env.API_KEY directly
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Helper to convert File or Blob to Base64
 const toBase64 = (file: File | Blob): Promise<string> => 
@@ -49,11 +50,13 @@ export const extractKnowledge = async (
     }
   });
   
+  // Use .text property as per guidelines
   return JSON.parse(response.text);
 };
 
 export const discoverRelationships = async (notes: Note[]): Promise<KnowledgeGraphData> => {
-  const context = notes.map(n => `ID:${n.id}|Title:${n.title}|Content:${n.content.substring(0, 100)}...`).join('\n');
+  // Fix: Note.content does not exist. Use extracted_text.
+  const context = notes.map(n => `ID:${n.id}|Title:${n.title}|Content:${n.extracted_text.substring(0, 100)}...`).join('\n');
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -96,11 +99,13 @@ export const discoverRelationships = async (notes: Note[]): Promise<KnowledgeGra
     }
   });
   
+  // Use .text property as per guidelines
   return JSON.parse(response.text);
 };
 
 export const chatWithKnowledge = async (query: string, notes: Note[], history: any[]): Promise<string> => {
-  const context = notes.map(n => `[Source: ${n.title}] ${n.content}`).join('\n\n');
+  // Fix: Note.content does not exist. Use extracted_text.
+  const context = notes.map(n => `[Source: ${n.title}] ${n.extracted_text}`).join('\n\n');
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -116,6 +121,7 @@ export const chatWithKnowledge = async (query: string, notes: Note[], history: a
     }
   });
   
+  // Use .text property as per guidelines
   return response.text || "I couldn't find relevant information in your notes.";
 };
 
@@ -124,11 +130,12 @@ export const generateInsights = async (notes: Note[]): Promise<Insight[]> => {
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
+    // Fix: Note.content does not exist. Use extracted_text.
     contents: `Analyze these notes and generate 3 "Second Brain" insights. 
     Look for patterns, forgotten ideas, or potential connections the user might have missed.
     
     Notes:
-    ${notes.map(n => n.content).join('\n---\n')}`,
+    ${notes.map(n => n.extracted_text).join('\n---\n')}`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -147,5 +154,6 @@ export const generateInsights = async (notes: Note[]): Promise<Insight[]> => {
     }
   });
   
+  // Use .text property as per guidelines
   return JSON.parse(response.text);
 };

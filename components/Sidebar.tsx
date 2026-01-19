@@ -1,23 +1,23 @@
 
 import React from 'react';
-import { LayoutDashboard, Brain, Database, MessageSquare, PlusCircle } from 'lucide-react';
 
-// Using standard Lucide-like icons for visual consistency without heavy imports if possible
 const Icons = {
   Dashboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>,
   Brain: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a5 5 0 0 0-5 5v1a5 5 0 0 0 5 5h0a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5Z"/><path d="M7 13a3 3 0 0 1 3 3v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a3 3 0 0 1 3-3Z"/><path d="M14 13a3 3 0 0 0-3 3v4a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-4a3 3 0 0 0-3-3Z"/></svg>,
   Memory: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>,
   Assistant: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>,
-  Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+  Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>,
+  Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
 };
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;
   noteCount: number;
+  deletedCount: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, noteCount }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, noteCount, deletedCount }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
     { id: 'brain', label: 'Second Brain', icon: Icons.Brain },
@@ -66,16 +66,35 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, noteCount })
               )}
             </button>
           ))}
+          
+          <div className="pt-4 mt-4 border-t border-slate-100">
+            <button
+              onClick={() => setActiveTab('recycle')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'recycle' 
+                  ? 'bg-red-50 text-red-700' 
+                  : 'text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              <Icons.Trash />
+              Recycle Bin
+              {deletedCount > 0 && (
+                <span className="ml-auto bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                  {deletedCount}
+                </span>
+              )}
+            </button>
+          </div>
         </nav>
       </div>
 
       <div className="mt-auto p-6 border-t border-slate-100">
         <div className="bg-slate-50 rounded-xl p-4">
-          <p className="text-xs text-slate-500 mb-1">Storage Usage</p>
-          <div className="w-full h-1.5 bg-slate-200 rounded-full mb-2">
-            <div className="w-1/4 h-full bg-indigo-500 rounded-full"></div>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">System Privacy Status</p>
+          <div className="flex items-center gap-2 mt-2">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            <p className="text-[11px] text-slate-600 font-medium">Local-first privacy active</p>
           </div>
-          <p className="text-[10px] text-slate-400">Local-first privacy active</p>
         </div>
       </div>
     </aside>
