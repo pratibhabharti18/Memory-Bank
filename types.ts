@@ -1,15 +1,26 @@
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  authProvider: 'google' | 'local';
+  profilePic?: string;
+  isVerified: boolean;
+  createdAt: number;
+}
+
 export interface Note {
   id: string;
+  userId: string; // Critical for data isolation
   type: 'pdf' | 'voice' | 'image' | 'url' | 'text';
   title: string;
   original_file: {
-    url: string;      // Data URL or storage path
+    url: string;
     name: string;
     mime_type: string;
   };
-  extracted_text: string; // Used for RAG/Embeddings
-  summary: string;        // AI-generated summary for UI
+  extracted_text: string;
+  summary: string;
   timestamp: number;
   tags: string[];
   entities: string[];
@@ -17,7 +28,6 @@ export interface Note {
   deletedAt?: number;
 }
 
-// Added GraphNode export to resolve import error in BrainView.tsx
 export interface GraphNode {
   id: string;
   name: string;
@@ -25,7 +35,6 @@ export interface GraphNode {
   val: number;
 }
 
-// Added GraphLink export to resolve import error in BrainView.tsx
 export interface GraphLink {
   source: string;
   target: string;

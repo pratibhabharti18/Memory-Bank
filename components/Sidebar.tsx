@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { User } from '../types';
 
 const Icons = {
   Dashboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>,
@@ -7,7 +8,8 @@ const Icons = {
   Memory: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>,
   Assistant: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>,
   Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>,
-  Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+  Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
+  Logout: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
 };
 
 interface SidebarProps {
@@ -15,9 +17,11 @@ interface SidebarProps {
   setActiveTab: (tab: any) => void;
   noteCount: number;
   deletedCount: number;
+  user: User;
+  onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, noteCount, deletedCount }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, noteCount, deletedCount, user, onLogout }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
     { id: 'brain', label: 'Second Brain', icon: Icons.Brain },
@@ -88,14 +92,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, noteCount, d
         </nav>
       </div>
 
-      <div className="mt-auto p-6 border-t border-slate-100">
-        <div className="bg-slate-50 rounded-xl p-4">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">System Privacy Status</p>
-          <div className="flex items-center gap-2 mt-2">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <p className="text-[11px] text-slate-600 font-medium">Local-first privacy active</p>
+      <div className="mt-auto p-4 m-4 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+        <div className="flex items-center gap-3 mb-3">
+          <img 
+            src={user.profilePic || `https://ui-avatars.com/api/?name=${user.name}&background=6366f1&color=fff`} 
+            alt={user.name} 
+            className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
+            <p className="text-[10px] text-slate-400 font-medium truncate uppercase tracking-widest">{user.authProvider} account</p>
           </div>
         </div>
+        <button 
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors"
+        >
+          <Icons.Logout />
+          Sign Out
+        </button>
       </div>
     </aside>
   );
