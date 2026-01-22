@@ -2,9 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Note, KnowledgeGraphData, Insight } from '../types';
 
-// Always use named parameter for apiKey and rely on process.env.API_KEY directly
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 // Helper to convert File or Blob to Base64
 const toBase64 = (file: File | Blob): Promise<string> => 
   new Promise((resolve, reject) => {
@@ -19,6 +16,8 @@ export const extractKnowledge = async (
   mode: 'text' | 'pdf' | 'url' | 'voice' | 'image' = 'text',
   attachment?: File | Blob
 ): Promise<{ tags: string[], entities: string[], summary: string }> => {
+  // Always create a fresh instance of GoogleGenAI to ensure up-to-date API key usage
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const parts: any[] = [{ text: `Analyze this content (${mode} source) and extract key metadata: \n\n ${text}` }];
   
@@ -51,15 +50,19 @@ export const extractKnowledge = async (
   });
   
   // Use .text property as per guidelines
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "{}");
 };
 
 export const discoverRelationships = async (notes: Note[]): Promise<KnowledgeGraphData> => {
+  // Always create a fresh instance of GoogleGenAI to ensure up-to-date API key usage
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   // Fix: Note.content does not exist. Use extracted_text.
   const context = notes.map(n => `ID:${n.id}|Title:${n.title}|Content:${n.extracted_text.substring(0, 100)}...`).join('\n');
   
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    // Upgraded to gemini-3-pro-preview for complex relationship mapping reasoning
+    model: 'gemini-3-pro-preview',
     contents: `Based on these notes, identify semantic relationships between them and key entities. 
     Notes:
     ${context}`,
@@ -75,7 +78,7 @@ export const discoverRelationships = async (notes: Note[]): Promise<KnowledgeGra
               properties: {
                 id: { type: Type.STRING },
                 name: { type: Type.STRING },
-                type: { type: Type.STRING, enum: ['concept', 'entity', 'note'] },
+                type: { type: Type.STRING },
                 val: { type: Type.NUMBER }
               },
               required: ["id", "name", "type", "val"]
@@ -100,10 +103,13 @@ export const discoverRelationships = async (notes: Note[]): Promise<KnowledgeGra
   });
   
   // Use .text property as per guidelines
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || '{"nodes":[],"links":[]}');
 };
 
 export const chatWithKnowledge = async (query: string, notes: Note[], history: any[]): Promise<string> => {
+  // Always create a fresh instance of GoogleGenAI to ensure up-to-date API key usage
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   // Fix: Note.content does not exist. Use extracted_text.
   const context = notes.map(n => `[Source: ${n.title}] ${n.extracted_text}`).join('\n\n');
   
@@ -117,7 +123,7 @@ export const chatWithKnowledge = async (query: string, notes: Note[], history: a
     Question: ${query}`,
     config: {
       temperature: 0.7,
-      thinkingConfig: { thinkingBudget: 2000 }
+      thinkingConfig: { thinkingBudget: 4000 }
     }
   });
   
@@ -128,8 +134,12 @@ export const chatWithKnowledge = async (query: string, notes: Note[], history: a
 export const generateInsights = async (notes: Note[]): Promise<Insight[]> => {
   if (notes.length < 2) return [];
   
+  // Always create a fresh instance of GoogleGenAI to ensure up-to-date API key usage
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    // Upgraded to gemini-3-pro-preview for complex pattern synthesis reasoning
+    model: 'gemini-3-pro-preview',
     // Fix: Note.content does not exist. Use extracted_text.
     contents: `Analyze these notes and generate 3 "Second Brain" insights. 
     Look for patterns, forgotten ideas, or potential connections the user might have missed.
@@ -146,7 +156,7 @@ export const generateInsights = async (notes: Note[]): Promise<Insight[]> => {
             id: { type: Type.STRING },
             title: { type: Type.STRING },
             description: { type: Type.STRING },
-            type: { type: Type.STRING, enum: ['pattern', 'suggestion', 'recap'] }
+            type: { type: Type.STRING }
           },
           required: ["id", "title", "description", "type"]
         }
@@ -155,5 +165,5 @@ export const generateInsights = async (notes: Note[]): Promise<Insight[]> => {
   });
   
   // Use .text property as per guidelines
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "[]");
 };
