@@ -1,7 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Note, KnowledgeGraphData, Insight, User } from './types';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -13,60 +11,29 @@ import RecycleBin from './components/RecycleBin';
 import AuthView from './components/AuthView';
 import { discoverRelationships, generateInsights } from './services/geminiService';
 
-// Firebase init in App.tsx to handle session listening
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_ID",
-  appId: "YOUR_APP_ID"
-};
-
-// Initialize Firebase using Modular SDK pattern
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('knowledge_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('knowledge_token');
+  });
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'brain' | 'memory' | 'assistant' | 'ingest' | 'recycle'>('dashboard');
   const [notes, setNotes] = useState<Note[]>([]);
   const [graphData, setGraphData] = useState<KnowledgeGraphData>({ nodes: [], links: [] });
   const [insights, setInsights] = useState<Insight[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // AUTH SESSION LISTENER
+  // Clear local storage notes on mount if user changed (or handle migration)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        const userObj: User = {
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || 'User',
-          email: firebaseUser.email || '',
-          authProvider: firebaseUser.providerData[0]?.providerId === 'google.com' ? 'google' : 'local',
-          profilePic: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${firebaseUser.displayName}&background=6366f1&color=fff`,
-          isVerified: firebaseUser.emailVerified,
-          createdAt: Date.now()
-        };
-        setUser(userObj);
-        setToken(idToken);
-      } else {
-        setUser(null);
-        setToken(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (user && token) {
+    if (user) {
       fetchMemories();
     } else {
       setNotes([]);
     }
-  }, [user, token]);
+  }, [user]);
 
   const fetchMemories = async () => {
     if (!token) return;
@@ -112,12 +79,15 @@ const App: React.FC = () => {
   const handleLoginSuccess = (user: User, token: string) => {
     setUser(user);
     setToken(token);
+    localStorage.setItem('knowledge_user', JSON.stringify(user));
+    localStorage.setItem('knowledge_token', token);
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
     setUser(null);
     setToken(null);
+    localStorage.removeItem('knowledge_user');
+    localStorage.removeItem('knowledge_token');
   };
 
   const handleAddNote = (note: Note) => {
